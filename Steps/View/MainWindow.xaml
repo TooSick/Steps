@@ -1,0 +1,35 @@
+﻿<Window x:Class="Steps.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Steps"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid ShowGridLines="True">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="31"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <DataGrid Grid.Row="1" ColumnWidth="0.25*" Margin="5">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Full name" CanUserReorder="False" CanUserResize="False"/>
+                    <DataGridTextColumn Header="Average steps" CanUserReorder="False" CanUserResize="False"/>
+                    <DataGridTextColumn Header="Best result" CanUserReorder="False" CanUserResize="False"/>
+                    <DataGridTextColumn Header="Worst result" CanUserReorder="False" CanUserResize="False"/>
+                </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel Grid.Row="0">
+                <Button Content="Download data" Width="100" HorizontalAlignment="Left" Margin="5"/>
+            </StackPanel>
+        </Grid>
+        <Canvas Grid.Column="1" Margin="5">
+            
+        </Canvas>
+    </Grid>
+</Window>
