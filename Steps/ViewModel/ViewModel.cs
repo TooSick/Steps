@@ -2,66 +2,133 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Steps.Model;
+using Steps.AuxiliaryClasses;
+using LiveCharts;
+using LiveCharts.Wpf;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows;
 
 namespace Steps.ViewModel
 {
-    public class ViewModel
+    public class ViewModel : INotifyPropertyChanged
     {
-        private Dictionary<uint, List<Person>> DailyRecords { get; set; }
         public List<Person> People { get; set; }
+        public string[] Labels { get; set; }
+        private SeriesCollection series;
+        public SeriesCollection Series 
+        { 
+            get { return series; } 
+            set 
+            {
+                series = value;
+                OnPropertyChanged("Series");
+            }
+        }
+        public Func<double, string> Formatter { get; set; }
+        private Person selectedPerson;
+        public Person SelectedPerson 
+        { 
+            get { return selectedPerson; } 
+            set 
+            {
+                selectedPerson = value;
+                OnPropertyChanged("SelectedPerson");
+                EditDataForChart();
+            }
+        }
+        private ClickCommand buttonClick;
+        public ClickCommand ButtonClick
+        {
+            get 
+            {
+                return buttonClick ?? (buttonClick = new ClickCommand(obj =>
+                {
+                    if (SelectedPerson != null)
+                    {
+                        JsonSerializer.SerializingData(SelectedPerson);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Select the person whose data you want to export."); 
+                    }
+                }));
+            }
+        }
 
         public ViewModel()
         {
-            DailyRecords = new Dictionary<uint, List<Person>>();
-            GetAllActivities();
-            People = new List<Person>();
-            AddUniquePeople();
-            AddStepsToUniquePerson();
+            People = GetPeople();
+            Labels = GetLabels();
+            EditDataForChart();
         }
 
-        private void AddUniquePeople()
+        private List<Person> GetPeople()
         {
-            HashSet<Person> tempSet = new HashSet<Person>(DailyRecords[0]);
-            for (uint i = 1; i < DailyRecords.Count(); i++)
+            string[] data = Directory.GetFiles("Data");
+            HashSet<Person> tempPeople = new HashSet<Person>();
+            Dictionary<int, List<Person>> statisticsForAllDays = new Dictionary<int, List<Person>>();
+            for (int i = 0; i < data.Length; i++)
             {
-                for (int j = 0; j < DailyRecords[i].Count(); j++)
+                statisticsForAllDays.Add(i, Deserializer.DeserializingData(data[i]));
+                tempPeople.AddRange(statisticsForAllDays[i]);
+            }
+            List<Person> people = tempPeople.ToList();
+            for (int i = 0; i < people.Count(); i++)
+            {
+                for (int j = 0; j < statisticsForAllDays.Count(); j++)
                 {
-                    tempSet.Add(DailyRecords[i][j]);
+                    if (statisticsForAllDays[j].Exists(p => p.FullName == people[i].FullName))
+                    {
+                        Person personToAdd = statisticsForAllDays[j].Find(p => people[i].FullName == p.FullName);
+                        people[i].AllSteps.Add(personToAdd.Steps);
+                        people[i].Statuses.Add(personToAdd.Status);
+                        people[i].Ranks.Add(personToAdd.Rank);
+                    }
+                    else
+                    {
+                        people[i].AllSteps.Add(0);
+                        people[i].Statuses.Add(string.Empty);
+                        people[i].Ranks.Add(0);
+                    }
                 }
             }
-
-            People = tempSet.ToList();
+            return people;
         }
 
-        private void AddStepsToUniquePerson()
+        private string[] GetLabels()
         {
-            for (int i = 0; i < People.Count(); i++)
+            string[] tempLabels = new string[People[0].AllSteps.Count()];
+            for (int i = 0; i < tempLabels.Count(); i++)
             {
-                List<Person> tempList = new List<Person>();
-                for (uint j = 0; j < DailyRecords.Count(); j++)
-                {
-                    var tempPerson = (from p in DailyRecords[j] where p.FullName == People[i].FullName && p.Steps != People[i].Steps select p).ToList();
-                    tempList.AddRange(tempPerson);
-                }
+                tempLabels[i] += (i + 1).ToString() + " day";
+            }
+            return tempLabels;
+        }
 
-                for (int j = 0; j < tempList.Count(); j++)
+        private void EditDataForChart()
+        {
+            if (SelectedPerson != null)
+            {
+                Series = new SeriesCollection
                 {
-                    People[i].AllSteps.Add(tempList[j].Steps);
-                    // возможно надо добавлять в список и rank и status
-                }
+                    new ColumnSeries
+                    {
+                        Values = new ChartValues<double>((IEnumerable<double>)SelectedPerson.AllSteps),
+                        DataLabels = true,
+                        LabelPoint = point => point.Y.ToString(),
+                    }
+                };
+                Formatter = value => value.ToString();
             }
         }
 
-        private void GetAllActivities()
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged([CallerMemberName] string prop = "")
         {
-            string[] data = Directory.GetFiles(@"C:\Users\meshc\OneDrive\Рабочий стол\Projects\Steps\Steps\Data\");
-            for (uint i = 0; i < data.Length; i++)
-            {
-                DailyRecords.Add(i, Deserializer.DeserializingData(data[i]));
-            }
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(prop));
         }
     }
 }

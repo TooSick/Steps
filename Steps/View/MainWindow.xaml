@@ -4,32 +4,49 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Steps"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf" xmlns:viewmodel="clr-namespace:Steps.ViewModel" d:DataContext="{d:DesignInstance Type=viewmodel:ViewModel}"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid ShowGridLines="True">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-        <Grid Grid.Column="0">
+        Title="MainWindow" Height="600" Width="900">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="31"/>
+                <RowDefinition Height="30"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <DataGrid Grid.Row="1" ColumnWidth="0.25*" Margin="5">
+            <DataGrid Grid.Row="1" Margin="5" ScrollViewer.CanContentScroll="True" 
+                      ScrollViewer.VerticalScrollBarVisibility="Visible" ItemsSource="{Binding People}" AutoGenerateColumns="False" 
+                      SelectedItem="{Binding SelectedPerson}">
+                <DataGrid.ItemContainerStyle>
+                    <Style TargetType="DataGridRow">
+                        <Setter Property="Background" Value="{Binding Path=RowColor}"/>
+                    </Style>
+                </DataGrid.ItemContainerStyle>
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Full name" CanUserReorder="False" CanUserResize="False"/>
-                    <DataGridTextColumn Header="Average steps" CanUserReorder="False" CanUserResize="False"/>
-                    <DataGridTextColumn Header="Best result" CanUserReorder="False" CanUserResize="False"/>
-                    <DataGridTextColumn Header="Worst result" CanUserReorder="False" CanUserResize="False"/>
+                    <DataGridTextColumn Header="Full name" CanUserReorder="False" CanUserResize="False" Width="0.25*" Binding="{Binding Path=FullName}"/>
+                    <DataGridTextColumn Header="Average steps" CanUserReorder="False" CanUserResize="False" Width="0.25*" Binding="{Binding Path=AverageSteps}"/>
+                    <DataGridTextColumn Header="Best result" CanUserReorder="False" CanUserResize="False" Width="0.25*" Binding="{Binding Path=BestResult}"/>
+                    <DataGridTextColumn Header="Worst result" CanUserReorder="False" CanUserResize="False" Width="0.25*" Binding="{Binding Path=WorstResult}"/>
                 </DataGrid.Columns>
             </DataGrid>
-            <StackPanel Grid.Row="0">
-                <Button Content="Download data" Width="100" HorizontalAlignment="Left" Margin="5"/>
+            <StackPanel Grid.Row="0" Background="LightBlue">
+                <Button Content="Export data" Width="100" HorizontalAlignment="Left" Margin="5" IsEnabled="True" Command="{Binding ButtonClick}"/>
             </StackPanel>
         </Grid>
-        <Canvas Grid.Column="1" Margin="5">
-            
-        </Canvas>
+        <lvc:CartesianChart Series="{Binding Series}" Grid.Column="1" Margin="5">
+            <lvc:CartesianChart.AxisX>
+                <lvc:Axis Labels="{Binding Labels}" Position="LeftBottom">
+                    <lvc:Axis.Separator >
+                        <lvc:Separator Step="1"></lvc:Separator>
+                    </lvc:Axis.Separator>
+                </lvc:Axis>
+            </lvc:CartesianChart.AxisX>
+            <lvc:CartesianChart.AxisY>
+                <lvc:Axis Position="LeftBottom" LabelFormatter="{Binding Formatter}"/>
+            </lvc:CartesianChart.AxisY>
+        </lvc:CartesianChart>
     </Grid>
 </Window>

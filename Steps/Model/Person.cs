@@ -4,63 +4,36 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Windows.Media;
 
 namespace Steps.Model
 {
     public class Person
     {
-        struct Data
-        {
-            public uint Rank { get; set; }
-            public string Status { get; set; }
-            public uint Steps { get; set; }
-        }
-        //нужен словарь для хранения шагов и дней
         [JsonPropertyName("User")]
         public string FullName { get; set; }
-        //[JsonPropertyName("Rank")]
-        //private uint rank;
-        //public uint Rank 
-        //{ 
-        //    get => rank; 
-        //    set 
-        //    {
-        //        rank = value;
-        //        Ranks.Add(rank);
-        //    } 
-        //}
-        //public List<uint> Ranks { get; set; }
-        //private string status;
-        //public string Status 
-        //{
-        //    get => status; 
-        //    set 
-        //    {
-        //        Statuses.Add(status);
-        //    } 
-        //}
-        //public List<string> Statuses { get; set; }
-        //private uint steps;
-        //public uint Steps 
-        //{
-        //    get { return steps; }
-        //    set 
-        //    { 
-        //        steps = value;
-        //        AllSteps.Add(steps);
-        //    } 
-        //}
-        //public float AverageSteps { get; private set; }
-        //public uint BestResult { get; private set; }
-        //public uint WorstResult { get; private set; }
-        //public ObservableCollection<uint> AllSteps { get; set; }
+        public uint Rank { get; set; }
+        [JsonIgnore]
+        public List<uint> Ranks { get; set; }
+        public string Status { get; set; }
+        [JsonIgnore]
+        public List<string> Statuses { get; set; }
+        public uint Steps { get; set; }
+        public double AverageSteps { get; private set; }
+        public uint BestResult { get; private set; }
+        public uint WorstResult { get; private set; }
+        [JsonIgnore]
+        public ObservableCollection<double> AllSteps { get; set; }
+        [JsonIgnore]
+        public Brush RowColor { get; set; }
 
         public Person()
         {
-            AllSteps = new ObservableCollection<uint>();
+            AllSteps = new ObservableCollection<double>();
             AllSteps.CollectionChanged += NewStepsAdded;
             Ranks = new List<uint>();
             Statuses = new List<string>();
+            RowColor = Brushes.White;
         }
 
         public override bool Equals(object obj)
@@ -82,27 +55,37 @@ namespace Steps.Model
             CalculatingAverageSteps();
             CalculatingBestResult();
             CalculatingWorstResult();
+            ChangeColor();
         }
 
         private void CalculatingAverageSteps()
         {
-            uint allSteps = 0;
-            foreach (uint s in AllSteps)
+            if (AverageSteps == 0)
             {
-                allSteps += s;
+                AverageSteps = AllSteps[^1];
             }
-
-            AverageSteps = allSteps / AllSteps.Count();
+            else
+            {
+                AverageSteps = ((AverageSteps * (AllSteps.Count - 1)) + AllSteps[^1]) / AllSteps.Count;
+            }
         }
 
         private void CalculatingBestResult()
         {
-            BestResult = AllSteps.Max();
+            BestResult = (uint)AllSteps.Max();
         }
 
         private void CalculatingWorstResult()
         {
-            WorstResult = AllSteps.Min();
+            WorstResult = (uint)AllSteps.Min();
+        }
+
+        private void ChangeColor()
+        {
+            if (BestResult > (AverageSteps + (AverageSteps * 0.2)) || WorstResult < (AverageSteps - (AverageSteps * 0.2)))
+            {
+                RowColor = Brushes.Red;
+            }
         }
     }
 }
